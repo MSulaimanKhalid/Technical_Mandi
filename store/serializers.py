@@ -1,5 +1,9 @@
+from decimal import Decimal
+
 from rest_framework import serializers
 from .models import (
+    Cart,
+    CartItem,
     Category,
     Product,
     ProductImage,
@@ -102,6 +106,54 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         )
 
 
+class CartItemSerializer(serializers.ModelSerializer):
+    product = ProductListSerializer(read_only=True)
+    line_total = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CartItem
+        fields = (
+            'id',
+            'product',
+            'quantity',
+            'line_total',
+        )
+
+    def get_line_total(self, obj):
+        return str(obj.line_total)
+    
+
+class CartSerializer(serializers.ModelSerializer):
+    items = CartItemSerializer(source='cart_items', many=True, read_only=True)
+    cart_total = serializers.SerializerMethodField()
+    total_items = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Cart
+        fields = (
+            'id',
+            'items',
+            'cart_total',
+            'total_items',
+            'created_at',
+            'updated_at',
+        )
+
+    def get_cart_total(self, obj):
+        total = Decimal('0.00')
+        for item in obj.cart_items.all():
+            total += item.line_total
+
+        return str(total)
+
+    def get_total_items(self, obj):
+        total = 0
+        for item in obj.cart_items.all():
+            total += item.quantity
+
+        return total
+
+
 class CartAddSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
     quantity = serializers.IntegerField(min_value=1, default=1)
@@ -151,13 +203,10 @@ class OrderItemSerializer(serializers.ModelSerializer):
         )
 
     def get_line_total(self, obj):
-        return obj.line_total
+        return str(obj.line_total)
 
 
 class ShippingAddressSerializer(serializers.ModelSerializer):
-    """
-    Shows shipping address in order response.
-    """
 
     class Meta:
         model = ShippingAddress
@@ -173,9 +222,6 @@ class ShippingAddressSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    """
-    Shows complete order response.
-    """
 
     order_items = OrderItemSerializer(many=True, read_only=True)
     shipping_address = ShippingAddressSerializer(read_only=True)

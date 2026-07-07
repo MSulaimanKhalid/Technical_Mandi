@@ -114,6 +114,8 @@ class OrderItem(models.Model):
 
     @property
     def line_total(self):
+        if self.unit_price is None or self.quantity is None:
+            return Decimal('0.00')
         return self.unit_price * self.quantity
 
     def __str__(self):
@@ -135,3 +137,54 @@ class ShippingAddress(models.Model):
 
     def __str__(self):
         return f"Shipping Address for Order {self.order.id} - {self.city}"
+
+
+class Cart(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='cart'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Cart for {self.user.username}"
+
+    @property
+    def total_items(self):
+        return sum(item.quantity for item in self.cart_items.all())
+
+    @property
+    def cart_total(self):
+        return sum(item.line_total for item in self.cart_items.all())
+
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(
+        Cart,
+        on_delete=models.CASCADE,
+        related_name='cart_items'
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='cart_items'
+    )
+    quantity = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['cart', 'product'], name='unique_cart_product_constraint')
+        ]
+
+    @property
+    def line_total(self):
+        if self.product_id is None:
+            return Decimal('0.00')
+        return self.product.price * self.quantity
+
+    def __str__(self):
+        return f"CartItem: {self.product.name} (x{self.quantity}) in Cart for {self.cart.user.username}"

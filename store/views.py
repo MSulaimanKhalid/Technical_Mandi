@@ -5,11 +5,14 @@ from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.exceptions import ValidationError
 
 from .models import (
     Category,
     Product,
     ProductInventory,
+    Cart,
+    CartItem,
     Order,
     OrderItem,
     ShippingAddress,
@@ -19,11 +22,17 @@ from .serializers import (
     CategorySerializer,
     ProductListSerializer,
     ProductDetailSerializer,
+    CartSerializer,
     CartAddSerializer,
     CartUpdateSerializer,
     ShippingAddressInputSerializer,
     OrderSerializer,
 )
+
+def get_or_create_cart(user):
+    cart, created = Cart.objects.get_or_create(user=user)
+    return cart
+
 
 
 def get_cart(session):
@@ -105,10 +114,15 @@ class ProductListView(generics.ListAPIView):
         search_text = self.request.query_params.get('search')
 
         if category_id:
-            queryset = queryset.filter(category_id=category_id)
+            if not category_id.isdigit():
+                raise serializers.ValidationError({
+                    'category': 'Category must be a valid integer.'
+                })
+
+            queryset = queryset.filter(category_id=int(category_id))
 
         if search_text:
-            queryset = queryset.filter(name__icontains=search_text)
+            queryset = queryset.filter(name__icontains=search_text.strip())
 
         return queryset.order_by('-created_at')
 
@@ -134,8 +148,9 @@ class CartDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        cart = get_cart(request.session)
-        return Response(build_cart_response(cart))
+        cart = get_or_create_cart(request.user)
+        serializers = CartSerializer(cart,context={'request': request})
+        return Response(serializers.data,status=status.HTTP_200_OK)
 
 
 class CartAddView(APIView):
@@ -157,41 +172,38 @@ class CartAddView(APIView):
         )
 
         try:
+            product = Product.objects.get(id=product_id, is_available=True, category__is_active=True)
+        except Product.DoesNotExist:
+            return Response({'detail': 'Product no longer available.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
             inventory = ProductInventory.objects.select_for_update().get(product=product)
         except ProductInventory.DoesNotExist:
             return Response({
                 'detail': f'Inventory not found for {product.name}.'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        cart = get_cart(request.session)
-        product_key = str(product.id)
-
-        existing_quantity = cart.get(
-            product_key,
-            {'quantity': 0}
-        )['quantity']
-
-        new_quantity = existing_quantity + quantity
+        cart = get_or_create_cart(request.user)
+        cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product,defaults={'quantity': 0})
+        new_quantity = cart_item.quantity + quantity
 
         if inventory.stock_quantity < new_quantity:
             return Response({
                 'detail': f'Not enough stock. Available: {inventory.stock_quantity}'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        cart[product_key] = {
-            'quantity': new_quantity
-        }
+        cart_item.quantity = new_quantity
+        cart_item.save()
 
-        request.session.modified = True
+        cart.refresh_from_db()
 
         return Response({
             'message': 'Product added to cart.',
-            'cart': build_cart_response(cart),
+            'cart': CartSerializer(cart, context={'request': request}).data,
         }, status=status.HTTP_200_OK)
 
 
 class CartUpdateView(APIView):
-
     permission_classes = [IsAuthenticated]
 
     @transaction.atomic
@@ -200,66 +212,50 @@ class CartUpdateView(APIView):
         serializer.is_valid(raise_exception=True)
 
         quantity = serializer.validated_data['quantity']
-        product_key = str(product_id)
-
-        cart = get_cart(request.session)
-
-        if product_key not in cart:
-            return Response({
-                'detail': 'Product is not in cart.'
-            }, status=status.HTTP_404_NOT_FOUND)
+        cart = get_or_create_cart(request.user)
 
         try:
-            product = Product.objects.get(
-                id=product_id,
-                is_available=True,
-                category__is_active=True
-            )
-        except Product.DoesNotExist:
-            return Response({
-                'detail': 'Product does not exist.'
-            }, status=status.HTTP_404_NOT_FOUND)
+            cart_item = CartItem.objects.select_related('product').get(cart=cart, product_id=product_id)
+        except CartItem.DoesNotExist:
+            return Response({'detail': 'Product is not in cart.'}, status=status.HTTP_404_NOT_FOUND)
 
         try:
-            inventory = ProductInventory.objects.select_for_update().get(product=product)
+            inventory = ProductInventory.objects.select_for_update().get(product=cart_item.product)
         except ProductInventory.DoesNotExist:
-            return Response({
-                'detail': f'Inventory not found for {product.name}.'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': f'Inventory not found for {cart_item.product.name}.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         if inventory.stock_quantity < quantity:
-            return Response({
-                'detail': f'Not enough stock. Available: {inventory.stock_quantity}'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': f'Not enough stock. Available: {inventory.stock_quantity}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        cart[product_key]['quantity'] = quantity
-        request.session.modified = True
-
-        return Response({
-            'message': 'Cart updated.',
-            'cart': build_cart_response(cart),
-        })
-
+        cart_item.quantity = quantity
+        cart_item.save()
+        return Response({'message': 'Cart updated.', 'cart': CartSerializer(cart, context={'request': request}).data})
 
 class CartRemoveView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, product_id):
-        cart = get_cart(request.session)
-        product_key = str(product_id)
+        cart = get_or_create_cart(request.user)
 
-        if product_key not in cart:
+        try:
+            cart_item = CartItem.objects.get(cart=cart, product_id=product_id)
+        except CartItem.DoesNotExist:
             return Response({
                 'detail': 'Product is not in cart.'
             }, status=status.HTTP_404_NOT_FOUND)
-
-        del cart[product_key]
-
-        request.session.modified = True
+        
+        cart_item.delete()
+        cart.refresh_from_db()
 
         return Response({
             'message': 'Product removed from cart.',
-            'cart': build_cart_response(cart),
+            'cart': CartSerializer(cart, context={'request': request}).data,
         })
 
 
@@ -267,11 +263,12 @@ class CartClearView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request):
-        request.session['cart'] = {}
-        request.session.modified = True
+        cart = get_or_create_cart(request.user)
+        cart.cart_items.all().delete()
 
         return Response({
-            'message': 'Cart cleared.'
+            'message': 'Cart cleared.',
+            'cart': CartSerializer(cart, context={'request': request}).data,
         })
 
 
@@ -283,9 +280,11 @@ class CheckoutView(APIView):
         serializer = ShippingAddressInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        cart = get_cart(request.session)
+        cart = get_or_create_cart(request.user)
 
-        if not cart:
+        cart_items = list(cart.cart_items.select_related('product', 'product__category'))
+
+        if not cart_items:
             return Response({
                 'detail': 'Cart is empty.'
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -301,36 +300,19 @@ class CheckoutView(APIView):
 
         total_amount = Decimal('0.00')
 
-        for product_id, item_data in cart.items():
-            try:
-                product = Product.objects.get(
-                    id=product_id,
-                    is_available=True,
-                    category__is_active=True
-                )
-            except Product.DoesNotExist:
-                # Raising (instead of returning) inside an atomic block is
-                # what actually triggers the rollback: DRF turns this into
-                # a 400 response, and the order/order-items created above
-                # in this transaction are undone.
-                raise serializers.ValidationError(
-                    f'Product {product_id} does not exist.'
-                )
+        for cart_item in cart.items():
+            product = cart_item.product
+            quantity = cart_item.quantity
 
-            quantity = item_data['quantity']
+            if not product.is_available or not product.category.is_active:
+                raise ValidationError(f'Product {product.name} is not available anymore.')
+
 
             try:
-                # select_for_update locks this inventory row until the
-                # transaction commits/rolls back, so a second concurrent
-                # checkout can't read the same stock_quantity before this
-                # one finishes writing it (prevents overselling).
-                inventory = ProductInventory.objects.select_for_update().get(
-                    product=product
-                )
+                inventory = ProductInventory.objects.select_for_update().get(product=product)
             except ProductInventory.DoesNotExist:
-                raise serializers.ValidationError(
-                    f'Inventory not found for {product.name}.'
-                )
+                raise ValidationError(f'Inventory not found for {product.name}.')
+            
 
             if inventory.stock_quantity < quantity:
                 raise serializers.ValidationError(
@@ -350,7 +332,7 @@ class CheckoutView(APIView):
             )
 
             inventory.stock_quantity -= quantity
-            inventory.save()
+            inventory.save(update_fields=['stock_quantity','updated_at'])
 
         ShippingAddress.objects.create(
             order=order,
@@ -363,10 +345,9 @@ class CheckoutView(APIView):
         )
 
         order.total_amount = total_amount
-        order.save()
+        order.save(update_fields=['total_amount','updated_at'])
 
-        request.session['cart'] = {}
-        request.session.modified = True
+        cart.items.all().delete()
 
         return Response({
             'message': 'Checkout successful.',
