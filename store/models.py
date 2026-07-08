@@ -1,6 +1,7 @@
 from decimal import Decimal
-from django.db import models
+from django.db import models,transaction
 from django.conf import settings
+from django.db.models import Q
 
 
 class Category(models.Model):
@@ -38,9 +39,37 @@ class ProductImage(models.Model):
         related_name='images'
     )
     image = models.ImageField(upload_to='products/')
-    alt_text = models.CharField(max_length=150, blank=True)
+    alt_text = models.CharField(max_length=150, blank=False)
     is_primary = models.BooleanField(default=False)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['product'],
+                condition=Q(is_primary=True),
+                name='unique_primary_image_per_product'
+            )
+        ]
+
+    def save(self, *args, **kwargs):
+        with transaction.atomic():
+            if self.product_id and not self.pk:
+                has_existing_images = ProductImage.objects.filter(
+                    product_id=self.product_id
+                ).exists()
+
+                if not has_existing_images:
+                    self.is_primary = True
+
+            if self.product_id and self.is_primary:
+                ProductImage.objects.filter(
+                    product_id=self.product_id,
+                    is_primary=True
+                ).exclude(pk=self.pk).update(is_primary=False)
+
+            super().save(*args, **kwargs)
+
 
     def __str__(self):
         return f"Image for {self.product.name}"

@@ -1,4 +1,7 @@
 from django.contrib import admin
+from django import forms
+from django.forms.models import BaseInlineFormSet
+
 from .models import (
     Category,
     Product,
@@ -36,8 +39,51 @@ class CategoryAdmin(admin.ModelAdmin):
     )
 
 
+class ProductImageInlineFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+
+        active_image_forms = []
+        primary_forms = []
+
+        for form in self.forms:
+            if not hasattr(form, 'cleaned_data'):
+                continue
+
+            cleaned_data = form.cleaned_data
+
+            if not cleaned_data:
+                continue
+
+            if cleaned_data.get('DELETE'):
+                continue
+
+            image = cleaned_data.get('image')
+            existing_image = form.instance.pk
+
+            if image or existing_image:
+                active_image_forms.append(form)
+
+                if cleaned_data.get('is_primary'):
+                    primary_forms.append(form)
+
+        if not active_image_forms:
+            return
+
+        if len(primary_forms) > 1:
+            raise forms.ValidationError(
+                'Only one product image can be marked as primary.'
+            )
+
+        if len(primary_forms) == 0:
+            first_form = active_image_forms[0]
+            first_form.cleaned_data['is_primary'] = True
+            first_form.instance.is_primary = True
+
+
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
+    formset = ProductImageInlineFormSet
     extra = 1
 
 

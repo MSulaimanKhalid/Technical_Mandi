@@ -300,7 +300,7 @@ class CheckoutView(APIView):
 
         total_amount = Decimal('0.00')
 
-        for cart_item in cart.items():
+        for cart_item in cart_items:
             product = cart_item.product
             quantity = cart_item.quantity
 
@@ -347,7 +347,7 @@ class CheckoutView(APIView):
         order.total_amount = total_amount
         order.save(update_fields=['total_amount','updated_at'])
 
-        cart.items.all().delete()
+        cart.cart_items.all().delete()
 
         return Response({
             'message': 'Checkout successful.',
