@@ -1,0 +1,34 @@
+<svg width="320" height="300" viewBox="0 0 320 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Technical Mandi polar bear mascot</title>
+  <desc>An original minimal line-art polar bear used as a calm decorative mascot.</desc>
+  <g stroke="#587880" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M95 262C71 249 56 224 57 193C58 164 70 137 91 119C98 113 104 105 106 96C109 84 117 75 128 72C137 70 144 73 150 79C158 70 169 67 179 71C191 76 198 87 198 101C198 107 201 112 206 116C228 133 243 160 245 190C248 220 236 247 215 262H95Z" fill="#FFFFFF"/>
+    <path d="M128 74C128 62 136 53 147 53C156 53 164 59 167 68"/>
+    <path d="M174 72C176 60 184 52 195 53C207 54 214 64 212 77"/>
+    <path d="M111 123C117 111 128 102 142 98C160 93 180 97 194 109C203 116 207 126 205 136C203 146 196 153 187 158C174 164 161 166 149 165"/>
+    <path d="M203 129C218 128 230 133 236 142C240 148 240 155 236 160C232 165 224 167 216 164"/>
+    <path d="M236 143C246 143 255 146 260 152C266 159 266 168 260 174C253 181 239 182 227 176"/>
+    <circle cx="169" cy="119" r="4" fill="#283236" stroke="none"/>
+    <path d="M194 140C189 145 183 147 176 147"/>
+    <path d="M257 154C266 153 274 157 277 163C280 169 277 175 270 177C262 180 254 176 251 170" fill="#283236"/>
+    <path d="M109 262C105 238 107 215 114 194"/>
+    <path d="M210 262C216 241 216 220 211 199"/>
+    <path d="M139 262C139 242 136 225 130 211"/>
+    <path d="M181 262C184 243 183 226 178 210"/>
+    <path d="M93 262H222"/>
+  </g>
+  <g stroke="#AFDAE0" stroke-width="2" stroke-linecap="round">
+    <path d="M85 167L76 173"/>
+    <path d="M88 188L76 193"/>
+    <path d="M91 210L81 215"/>
+    <path d="M110 151L103 158"/>
+    <path d="M130 178L121 184"/>
+    <path d="M151 194L143 200"/>
+    <path d="M183 183L191 189"/>
+    <path d="M205 166L214 172"/>
+    <path d="M218 204L228 209"/>
+    <path d="M116 229L108 234"/>
+    <path d="M164 232L156 238"/>
+    <path d="M198 232L208 237"/>
+  </g>
+</svg>

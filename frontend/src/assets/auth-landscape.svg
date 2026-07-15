@@ -1,0 +1,28 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Technical Mandi authentication background</title>
+  <desc>Original pale mountain, forest and lake background for login and signup pages.</desc>
+  <rect width="1600" height="900" fill="#F7F9F8"/>
+  <rect y="680" width="1600" height="220" fill="#EFF8FA"/>
+  <circle cx="1320" cy="132" r="96" fill="#EAF6F8"/>
+  <circle cx="208" cy="140" r="122" fill="#F1F6F5"/>
+  <g stroke="#AFDAE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.76">
+    <path d="M0 480L212 254L376 420L516 280L707 485"/>
+    <path d="M212 254L264 349L310 327L376 420"/>
+    <path d="M516 280L565 367L607 342L707 485"/>
+    <path d="M895 485L1084 286L1242 436L1387 315L1600 515"/>
+    <path d="M1084 286L1128 367L1172 344L1242 436"/>
+    <path d="M1387 315L1436 397L1475 374L1600 515"/>
+  </g>
+  <path d="M0 624C185 582 341 602 505 637C708 680 930 679 1112 631C1285 585 1443 584 1600 618V900H0V624Z" fill="#F0F7F6"/>
+  <g stroke="#587880" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.42">
+    <path d="M92 668V540"/><path d="M92 558L55 599H129L92 558Z"/><path d="M92 590L42 642H142L92 590Z"/>
+    <path d="M186 662V566"/><path d="M186 580L158 611H214L186 580Z"/><path d="M186 604L149 643H223L186 604Z"/>
+    <path d="M298 676V530"/><path d="M298 550L256 596H340L298 550Z"/><path d="M298 584L242 642H354L298 584Z"/>
+    <path d="M1298 670V540"/><path d="M1298 558L1261 599H1335L1298 558Z"/><path d="M1298 590L1248 642H1348L1298 590Z"/>
+    <path d="M1412 672V562"/><path d="M1412 578L1380 613H1444L1412 578Z"/><path d="M1412 605L1370 649H1454L1412 605Z"/>
+    <path d="M1512 680V532"/><path d="M1512 552L1470 598H1554L1512 552Z"/><path d="M1512 586L1456 644H1568L1512 586Z"/>
+  </g>
+  <g fill="#587880" opacity="0.24">
+    <circle cx="118" cy="188" r="5"/><circle cx="310" cy="154" r="4"/><circle cx="1278" cy="206" r="5"/><circle cx="1472" cy="152" r="4"/>
+  </g>
+</svg>

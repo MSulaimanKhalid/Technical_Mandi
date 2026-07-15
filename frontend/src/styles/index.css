@@ -1,0 +1,12 @@
+:root {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  color-scheme: light;
+}
+
+body { min-width: 320px; }
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}

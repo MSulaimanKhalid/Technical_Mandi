@@ -1,0 +1,38 @@
+<svg width="1200" height="480" viewBox="0 0 1200 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Technical Mandi hero landscape</title>
+  <desc>Original quiet mountain and forest line art for the marketplace hero.</desc>
+  <rect width="1200" height="480" rx="36" fill="#F7FAF9"/>
+  <circle cx="980" cy="105" r="84" fill="#EAF6F8"/>
+  <circle cx="1060" cy="360" r="130" fill="#F1F6F5"/>
+  <path d="M0 352C137 325 194 337 319 358C450 380 552 395 670 373C808 347 914 299 1200 336V480H0V352Z" fill="#F2F8F7"/>
+  <g stroke="#AFDAE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.85">
+    <path d="M455 288L583 155L680 249L751 183L905 330"/>
+    <path d="M583 155L620 225L647 208L680 249"/>
+    <path d="M751 183L787 251L814 234L905 330"/>
+    <path d="M335 326L430 229L514 318"/>
+    <path d="M430 229L455 275L477 259L514 318"/>
+  </g>
+  <g stroke="#587880" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.48">
+    <path d="M665 373L665 298"/>
+    <path d="M665 310L643 334H687L665 310Z"/>
+    <path d="M665 328L635 358H695L665 328Z"/>
+    <path d="M744 358L744 286"/>
+    <path d="M744 298L722 322H766L744 298Z"/>
+    <path d="M744 318L714 348H774L744 318Z"/>
+    <path d="M833 356L833 300"/>
+    <path d="M833 309L816 329H850L833 309Z"/>
+    <path d="M833 325L809 350H857L833 325Z"/>
+    <path d="M925 351L925 280"/>
+    <path d="M925 292L903 316H947L925 292Z"/>
+    <path d="M925 313L895 344H955L925 313Z"/>
+    <path d="M1035 361L1035 305"/>
+    <path d="M1035 314L1018 334H1052L1035 314Z"/>
+    <path d="M1035 329L1011 354H1059L1035 329Z"/>
+  </g>
+  <g fill="#587880" opacity="0.28">
+    <circle cx="884" cy="105" r="4"/>
+    <circle cx="940" cy="72" r="3"/>
+    <circle cx="1090" cy="132" r="4"/>
+    <circle cx="1010" cy="182" r="3"/>
+  </g>
+</svg>
